@@ -7,9 +7,7 @@ on:
       - main
     paths:
       - .github/workflows/autobump.yml
-  schedule:
-    # Every day at 9:25 UTC
-    - cron: 25 9 * * *
+
 
 permissions: {}
 
