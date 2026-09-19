@@ -7,17 +7,18 @@ class Openrgbd < Formula
   license "GPL-2.0-only"
   head "https://github.com/douglowder/OpenRGB.git", branch: "doug/headless-library"
 
-  # The daemon reaches USB and HID devices through the macOS IOKit backends and
-  # runs as a per-user LaunchAgent.  The Linux build works but is packaged by
-  # the distributions, not here.
-  depends_on :macos
-
   # qmake only: the daemon and the core it links contain no Qt.  qtbase rather
   # than qt, which adds the QML and multimedia modules that nothing here uses.
   depends_on "qtbase" => :build
 
   depends_on "hidapi"
   depends_on "libusb"
+
+  # The daemon reaches USB and HID devices through the macOS IOKit backends and
+  # runs as a per-user LaunchAgent.  The Linux build works but is packaged by
+  # the distributions, not here.
+  depends_on :macos
+
   depends_on "mbedtls@3"
 
   def install
@@ -27,7 +28,7 @@ class Openrgbd < Formula
       PREFIX=#{prefix}
       COMMITS=#{version.to_s.split(".").last}
       SHORTHASH=#{stable.specs.fetch(:revision, "").slice(0, 7)}
-      MBEDTLS_PREFIX=#{Formula["mbedtls@3"].opt_prefix}
+      MBEDTLS_PREFIX=#{formula_opt_prefix("mbedtls@3")}
     ]
 
     # Two separate targets rather than the OpenRGB.pro subdirs project, which
@@ -44,7 +45,7 @@ class Openrgbd < Formula
     # qmake gives the daemon an rpath into the build tree as well as one into
     # the prefix.  The build tree is gone by the time anyone runs the binary,
     # and editing it invalidates the ad-hoc signature that arm64 requires.
-    system "install_name_tool", "-delete_rpath", buildpath, bin/"openrgbd"
+    MachO::Tools.delete_rpath(bin/"openrgbd", buildpath.to_s)
     system "codesign", "--force", "--sign", "-", bin/"openrgbd"
   end
 
